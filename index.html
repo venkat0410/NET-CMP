@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Siemens Net Comparator</title>
+
+<style>
+    *{
+        margin:0;
+        padding:0;
+        box-sizing:border-box;
+        font-family:Segoe UI, sans-serif;
+    }
+
+    body{
+        background:#0f1117;
+        color:#e6edf3;
+        padding:20px;
+    }
+
+    h1{
+        text-align:center;
+        margin-bottom:20px;
+        color:#58a6ff;
+    }
+
+    .upload-container{
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:20px;
+        margin-bottom:20px;
+    }
+
+    .card{
+        background:#161b22;
+        padding:20px;
+        border-radius:12px;
+        border:1px solid #30363d;
+    }
+
+    .card h2{
+        margin-bottom:15px;
+        color:#58a6ff;
+    }
+
+    input[type=file]{
+        width:100%;
+        padding:10px;
+        background:#0d1117;
+        border:1px solid #30363d;
+        color:white;
+        border-radius:8px;
+    }
+
+    button{
+        background:#238636;
+        border:none;
+        padding:12px 20px;
+        color:white;
+        border-radius:8px;
+        cursor:pointer;
+        font-weight:bold;
+        margin-top:15px;
+    }
+
+    button:hover{
+        background:#2ea043;
+    }
+
+    .summary{
+        display:grid;
+        grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+        gap:15px;
+        margin-top:20px;
+        margin-bottom:20px;
+    }
+
+    .summary-box{
+        background:#161b22;
+        border:1px solid #30363d;
+        border-radius:10px;
+        padding:15px;
+        text-align:center;
+    }
+
+    .summary-box h3{
+        color:#58a6ff;
+        margin-bottom:10px;
+    }
+
+    .filters{
+        display:flex;
+        gap:10px;
+        margin-bottom:20px;
+        flex-wrap:wrap;
+    }
+
+    .filters input,
+    .filters select{
+        padding:10px;
+        border-radius:8px;
+        border:1px solid #30363d;
+        background:#0d1117;
+        color:white;
+    }
+
+    .section{
+        background:#161b22;
+        border:1px solid #30363d;
+        border-radius:10px;
+        margin-bottom:20px;
+        overflow:hidden;
+    }
+
+    .section-header{
+        background:#21262d;
+        padding:15px;
+        font-size:18px;
+        font-weight:bold;
+        cursor:pointer;
+    }
+
+    .section-content{
+        padding:15px;
+        display:block;
+    }
+
+    .diff-item{
+        padding:12px;
+        border-bottom:1px solid #30363d;
+        margin-bottom:10px;
+        border-radius:8px;
+    }
+
+    .added{
+        background:#0d4429;
+        border-left:5px solid #2ea043;
+    }
+
+    .removed{
+        background:#4d1117;
+        border-left:5px solid #f85149;
+    }
+
+    .modified{
+        background:#3b2f0b;
+        border-left:5px solid #d29922;
+    }
+
+    .unchanged{
+        background:#1c2128;
+        border-left:5px solid #8b949e;
+    }
+
+    pre{
+        white-space:pre-wrap;
+        word-break:break-word;
+        margin-top:10px;
+        color:#c9d1d9;
+    }
+
+    .tag{
+        display:inline-block;
+        padding:4px 10px;
+        border-radius:20px;
+        font-size:12px;
+        margin-bottom:8px;
+        font-weight:bold;
+    }
+
+    .tag-added{
+        background:#238636;
+    }
+
+    .tag-removed{
+        background:#da3633;
+    }
+
+    .tag-modified{
+        background:#bb8009;
+    }
+
+    .hidden{
+        display:none;
+    }
+
+</style>
+</head>
+
+<body>
+
+<h1>Siemens Schematic Net Comparator</h1>
+
+<div class="upload-container">
+
+    <div class="card">
+        <h2>OLD Export File</h2>
+        <input type="file" id="oldFile">
+    </div>
+
+    <div class="card">
+        <h2>NEW Export File</h2>
+        <input type="file" id="newFile">
+    </div>
+
+</div>
+
+<button onclick="compareFiles()">Compare Files</button>
+<button onclick="exportCSV()">Export CSV</button>
+
+<div class="summary" id="summary"></div>
+
+<div class="filters">
+    <input type="text" id="searchBox" placeholder="Search..." onkeyup="applyFilters()">
+
+    <select id="filterType" onchange="applyFilters()">
+        <option value="all">All</option>
+        <option value="added">Added</option>
+        <option value="removed">Removed</option>
+        <option value="modified">Modified</option>
+    </select>
+</div>
+
+<div id="results"></div>
+
+<script>
+
+let globalResults = [];
+
+function parseSection(content, startTag, endTag) {
+
+    const start = content.indexOf(startTag);
+    const end = content.indexOf(endTag);
+
+    if(start === -1 || end === -1) return "";
+
+    return content.substring(start + startTag.length, end).trim();
+}
+
+function parseCompProps(section){
+
+    const lines = section.split('\n');
+    const data = {};
+
+    lines.forEach(line => {
+
+        if(line.startsWith('#') || !line.includes(':')) return;
+
+        const parts = line.split(':');
+        const ref = parts[0].trim();
+
+        data[ref] = parts.slice(1).join(':').trim();
+    });
+
+    return data;
+}
+
+function parseCompPins(section){
+
+    const lines = section.split('\n');
+    const data = {};
+
+    lines.forEach(line => {
+
+        if(line.startsWith('#') || !line.includes('((')) return;
+
+        const idx = line.indexOf('((');
+
+        const ref = line.substring(0, idx).trim();
+        const pins = line.substring(idx).trim();
+
+        data[ref] = pins;
+    });
+
+    return data;
+}
+
+function parseENets(section){
+
+    const lines = section.split('\n');
+    const data = {};
+
+    lines.forEach(line => {
+
+        if(line.startsWith('#') || !line.includes(':')) return;
+
+        const parts = line.split(':');
+
+        data[parts[0].trim()] = parts[1].trim();
+    });
+
+    return data;
+}
+
+function parseNets(section){
+
+    const lines = section.split('\n');
+    const data = {};
+
+    lines.forEach(line => {
+
+        if(line.startsWith('#') || !line.includes(':')) return;
+
+        const idx = line.indexOf(':');
+
+        const netName = line.substring(0, idx).trim();
+
+        const pins = line.substring(idx + 1)
+            .replace(';','')
+            .split(',')
+            .map(x => x.trim())
+            .sort();
+
+        data[netName] = pins;
+    });
+
+    return data;
+}
+
+function compareObjects(oldObj, newObj, category){
+
+    const results = [];
+
+    const allKeys = new Set([
+        ...Object.keys(oldObj),
+        ...Object.keys(newObj)
+    ]);
+
+    allKeys.forEach(key => {
+
+        if(!(key in oldObj)){
+
+            results.push({
+                category,
+                type:'added',
+                key,
+                old:'',
+                new:JSON.stringify(newObj[key], null, 2)
+            });
+
+        } else if(!(key in newObj)){
+
+            results.push({
+                category,
+                type:'removed',
+                key,
+                old:JSON.stringify(oldObj[key], null, 2),
+                new:''
+            });
+
+        } else {
+
+            const oldVal = JSON.stringify(oldObj[key]);
+            const newVal = JSON.stringify(newObj[key]);
+
+            if(oldVal !== newVal){
+
+                results.push({
+                    category,
+                    type:'modified',
+                    key,
+                    old:oldVal,
+                    new:newVal
+                });
+            }
+        }
+    });
+
+    return results;
+}
+
+async function compareFiles(){
+
+    const oldFile = document.getElementById('oldFile').files[0];
+    const newFile = document.getElementById('newFile').files[0];
+
+    if(!oldFile || !newFile){
+
+        alert("Please upload both OLD and NEW files");
+        return;
+    }
+
+    const oldText = await oldFile.text();
+    const newText = await newFile.text();
+
+    const oldData = buildDatabase(oldText);
+    const newData = buildDatabase(newText);
+
+    globalResults = [];
+
+    globalResults.push(...compareObjects(oldData.compprops, newData.compprops, 'COMPPROPS'));
+    globalResults.push(...compareObjects(oldData.comppins, newData.comppins, 'COMPPINS'));
+    globalResults.push(...compareObjects(oldData.enets, newData.enets, 'E-NETS'));
+    globalResults.push(...compareObjects(oldData.nets, newData.nets, 'NETS'));
+
+    renderSummary();
+    renderResults(globalResults);
+}
+
+function buildDatabase(content){
+
+    return {
+
+        compprops: parseCompProps(
+            parseSection(content, 'BEGIN_COMPPROPS', 'END_COMPPROPS')
+        ),
+
+        comppins: parseCompPins(
+            parseSection(content, 'BEGIN_COMPPINS', 'END_COMPPINS')
+        ),
+
+        enets: parseENets(
+            parseSection(content, 'BEGIN_E-NETS', 'END_E-NETS')
+        ),
+
+        nets: parseNets(
+            parseSection(content, 'BEGIN_NETS', 'END_NETS')
+        )
+    };
+}
+
+function renderSummary(){
+
+    const summary = document.getElementById('summary');
+
+    const added = globalResults.filter(r => r.type === 'added').length;
+    const removed = globalResults.filter(r => r.type === 'removed').length;
+    const modified = globalResults.filter(r => r.type === 'modified').length;
+
+    summary.innerHTML = `
+        <div class="summary-box">
+            <h3>Added</h3>
+            <div>${added}</div>
+        </div>
+
+        <div class="summary-box">
+            <h3>Removed</h3>
+            <div>${removed}</div>
+        </div>
+
+        <div class="summary-box">
+            <h3>Modified</h3>
+            <div>${modified}</div>
+        </div>
+
+        <div class="summary-box">
+            <h3>Total Differences</h3>
+            <div>${globalResults.length}</div>
+        </div>
+    `;
+}
+
+function renderResults(results){
+
+    const container = document.getElementById('results');
+
+    container.innerHTML = '';
+
+    const grouped = {};
+
+    results.forEach(r => {
+
+        if(!grouped[r.category]) grouped[r.category] = [];
+
+        grouped[r.category].push(r);
+    });
+
+    Object.keys(grouped).forEach(category => {
+
+        const section = document.createElement('div');
+        section.className = 'section';
+
+        const header = document.createElement('div');
+        header.className = 'section-header';
+        header.innerText = `${category} (${grouped[category].length})`;
+
+        const content = document.createElement('div');
+        content.className = 'section-content';
+
+        header.onclick = () => {
+
+            content.style.display =
+                content.style.display === 'none'
+                ? 'block'
+                : 'none';
+        };
+
+        grouped[category].forEach(item => {
+
+            const div = document.createElement('div');
+
+            div.className = `diff-item ${item.type}`;
+            div.dataset.type = item.type;
+            div.dataset.search = (
+                item.key + ' ' + item.old + ' ' + item.new
+            ).toLowerCase();
+
+            div.innerHTML = `
+                <div class="tag tag-${item.type}">
+                    ${item.type.toUpperCase()}
+                </div>
+
+                <h3>${item.key}</h3>
+
+                <pre>
+OLD:
+${item.old}
+
+NEW:
+${item.new}
+                </pre>
+            `;
+
+            content.appendChild(div);
+        });
+
+        section.appendChild(header);
+        section.appendChild(content);
+
+        container.appendChild(section);
+    });
+}
+
+function applyFilters(){
+
+    const search = document.getElementById('searchBox')
+        .value
+        .toLowerCase();
+
+    const filter = document.getElementById('filterType').value;
+
+    document.querySelectorAll('.diff-item').forEach(item => {
+
+        const matchesSearch =
+            item.dataset.search.includes(search);
+
+        const matchesFilter =
+            filter === 'all'
+            || item.dataset.type === filter;
+
+        item.style.display =
+            matchesSearch && matchesFilter
+            ? 'block'
+            : 'none';
+    });
+}
+
+function exportCSV(){
+
+    if(globalResults.length === 0){
+
+        alert("No comparison data available");
+        return;
+    }
+
+    let csv = "Category,Type,Key,Old,New\n";
+
+    globalResults.forEach(r => {
+
+        csv += `"${r.category}","${r.type}","${r.key}","${r.old.replace(/"/g,'""')}","${r.new.replace(/"/g,'""')}"\n`;
+    });
+
+    const blob = new Blob([csv], {type:'text/csv'});
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+
+    a.href = url;
+    a.download = 'comparison_report.csv';
+
+    a.click();
+
+    URL.revokeObjectURL(url);
+}
+
+</script>
+
+</body>
+</html>
