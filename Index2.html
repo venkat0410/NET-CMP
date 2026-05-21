@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Siemens KYN Net Comparator</title>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Segoe UI, Arial, sans-serif;
+}
+
+body{
+background:#f3f5f7;
+color:#222;
+padding:20px;
+}
+
+h1{
+text-align:center;
+margin-bottom:20px;
+color:#003366;
+}
+
+.container{
+max-width:1600px;
+margin:auto;
+}
+
+.upload-box{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:20px;
+margin-bottom:20px;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:10px;
+border:1px solid #ccc;
+box-shadow:0 2px 5px rgba(0,0,0,0.08);
+}
+
+.card h2{
+margin-bottom:15px;
+color:#003366;
+}
+
+input[type=file]{
+width:100%;
+padding:12px;
+border:1px solid #bbb;
+border-radius:6px;
+}
+
+.button-group{
+display:flex;
+gap:15px;
+margin-bottom:25px;
+flex-wrap:wrap;
+}
+
+button{
+background:#003366;
+color:white;
+border:none;
+padding:12px 20px;
+border-radius:6px;
+cursor:pointer;
+font-weight:bold;
+}
+
+button:hover{
+background:#0055aa;
+}
+
+.summary-table{
+width:100%;
+border-collapse:collapse;
+margin-bottom:30px;
+background:white;
+}
+
+.summary-table th,
+.summary-table td{
+border:1px solid #bbb;
+padding:10px;
+text-align:left;
+}
+
+.summary-table th{
+background:#d9e5f2;
+}
+
+.section{
+margin-bottom:30px;
+background:white;
+border-radius:10px;
+overflow:hidden;
+border:1px solid #ccc;
+}
+
+.section-title{
+background:#003366;
+color:white;
+padding:15px;
+font-size:20px;
+font-weight:bold;
+}
+
+.subsection{
+padding:15px;
+}
+
+.subsection h3{
+margin-bottom:10px;
+color:#003366;
+}
+
+.report-table{
+width:100%;
+border-collapse:collapse;
+margin-bottom:20px;
+}
+
+.report-table th,
+.report-table td{
+border:1px solid #ccc;
+padding:8px;
+vertical-align:top;
+word-break:break-word;
+}
+
+.report-table th{
+background:#efefef;
+}
+
+.added{
+background:#d8f5d8;
+}
+
+.removed{
+background:#ffd6d6;
+}
+
+.modified{
+background:#fff2cc;
+}
+
+.search-bar{
+margin-bottom:20px;
+}
+
+.search-bar input{
+width:100%;
+padding:12px;
+border:1px solid #bbb;
+border-radius:6px;
+font-size:16px;
+}
+
+.anchor-links{
+margin-bottom:20px;
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+}
+
+.anchor-links a{
+background:#003366;
+color:white;
+text-decoration:none;
+padding:8px 15px;
+border-radius:6px;
+}
+
+.anchor-links a:hover{
+background:#0055aa;
+}
+
+pre{
+white-space:pre-wrap;
+}
+
+@media print{
+button,
+.upload-box,
+.search-bar,
+.button-group,
+.anchor-links{
+display:none;
+}
+
+body{
+background:white;
+}
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<h1>Siemens KYN Net Comparator</h1>
+
+<div class="upload-box">
+
+<div class="card">
+<h2>Reference Design (OLD)</h2>
+<input type="file" id="oldFile">
+</div>
+
+<div class="card">
+<h2>New Design (NEW)</h2>
+<input type="file" id="newFile">
+</div>
+
+</div>
+
+<div class="button-group">
+<button onclick="runComparison()">Generate Comparison Report</button>
+<button onclick="downloadHTMLReport()">Download HTML Report</button>
+<button onclick="window.print()">Print / Save PDF</button>
+</div>
+
+<div class="search-bar">
+<input type="text" id="searchInput" placeholder="Search nets/components..." onkeyup="filterResults()">
+</div>
+
+<div class="anchor-links">
+<a href="#summary">Summary</a>
+<a href="#components">Components</a>
+<a href="#nets">Nets</a>
+<a href="#connectivity">Connectivity</a>
+</div>
+
+<div id="reportArea"></div>
+
+</div>
+
+<script>
+
+let comparisonData = {};
+
+async function runComparison(){
+
+const oldFile = document.getElementById('oldFile').files[0];
+const newFile = document.getElementById('newFile').files[0];
+
+if(!oldFile || !newFile){
+alert('Please upload both OLD and NEW KYN/TXT files');
+return;
+}
+
+const oldText = await oldFile.text();
+const newText = await newFile.text();
+
+const oldDB = buildDatabase(oldText);
+const newDB = buildDatabase(newText);
+
+comparisonData = compareDesigns(oldDB, newDB);
+
+renderReport(comparisonData, oldFile.name, newFile.name);
+}
+
+function extractSection(content, startTag, endTag){
+
+const start = content.indexOf(startTag);
+const end = content.indexOf(endTag);
+
+if(start === -1 || end === -1) return '';
+
+return content.substring(start + startTag.length, end).trim();
+}
+
+function parseCompProps(section){
+
+const obj = {};
+
+section.split('\n').forEach(line => {
+
+line = line.trim();
+
+if(!line || line.startsWith('#')) return;
+
+const idx = line.indexOf(':');
+
+if(idx === -1) return;
+
+const ref = line.substring(0, idx).trim();
+const value = line.substring(idx + 1).trim();
+
+obj[ref] = value;
+});
+
+return obj;
+}
+
+function parseCompPins(section){
+
+const obj = {};
+
+section.split('\n').forEach(line => {
+
+line = line.trim();
+
+if(!line || line.startsWith('#')) return;
+
+const idx = line.indexOf('((');
+
+if(idx === -1) return;
+
+const ref = line.substring(0, idx).trim();
+const pins = line.substring(idx).trim();
+
+obj[ref] = pins;
+});
+
+return obj;
+}
+
+function parseENets(section){
+
+const obj = {};
+
+section.split('\n').forEach(line => {
+
+line = line.trim();
+
+if(!line || line.startsWith('#')) return;
+
+const idx = line.indexOf(':');
+
+if(idx === -1) return;
+
+const key = line.substring(0, idx).trim();
+const value = line.substring(idx + 1).trim();
+
+obj[key] = value;
+});
+
+return obj;
+}
+
+function parseNets(section){
+
+const obj = {};
+
+section.split('\n').forEach(line => {
+
+line = line.trim();
+
+if(!line || line.startsWith('#')) return;
+
+const idx = line.indexOf(':');
+
+if(idx === -1) return;
+
+const netName = line.substring(0, idx).trim();
+
+const pins = line.substring(idx + 1)
+.replace(';','')
+.split(',')
+.map(x => x.trim())
+.filter(Boolean)
+.sort();
+
+obj[netName] = pins;
+});
+
+return obj;
+}
+
+function buildDatabase(content){
+
+return {
+
+compprops: parseCompProps(
+extractSection(content, 'BEGIN_COMPPROPS', 'END_COMPPROPS')
+),
+
+comppins: parseCompPins(
+extractSection(content, 'BEGIN_COMPPINS', 'END_COMPPINS')
+),
+
+enets: parseENets(
+extractSection(content, 'BEGIN_E-NETS', 'END_E-NETS')
+),
+
+nets: parseNets(
+extractSection(content, 'BEGIN_NETS', 'END_NETS')
+)
+};
+}
+
+function compareDesigns(oldDB, newDB){
+
+const result = {
+summary:{},
+components:{
+added:[],
+deleted:[],
+changed:[]
+},
+nets:{
+added:[],
+deleted:[],
+changed:[]
+},
+connectivity:[]
+};
+
+const oldComponents = Object.keys(oldDB.compprops);
+const newComponents = Object.keys(newDB.compprops);
+
+result.summary.oldComponentCount = oldComponents.length;
+result.summary.newComponentCount = newComponents.length;
+
+oldComponents.forEach(comp => {
+
+if(!newDB.compprops[comp]){
+result.components.deleted.push(comp);
+}
+else if(oldDB.compprops[comp] !== newDB.compprops[comp]){
+result.components.changed.push({
+component:comp,
+oldValue:oldDB.compprops[comp],
+newValue:newDB.compprops[comp]
+});
+}
+});
+
+newComponents.forEach(comp => {
+
+if(!oldDB.compprops[comp]){
+result.components.added.push(comp);
+}
+});
+
+const oldNets = Object.keys(oldDB.nets);
+const newNets = Object.keys(newDB.nets);
+
+result.summary.oldNetCount = oldNets.length;
+result.summary.newNetCount = newNets.length;
+
+oldNets.forEach(net => {
+
+if(!newDB.nets[net]){
+result.nets.deleted.push(net);
+}
+else{
+
+const oldPins = oldDB.nets[net];
+const newPins = newDB.nets[net];
+
+const removedPins = oldPins.filter(x => !newPins.includes(x));
+const addedPins = newPins.filter(x => !oldPins.includes(x));
+
+if(removedPins.length || addedPins.length){
+
+result.nets.changed.push(net);
+
+result.connectivity.push({
+net,
+removedPins,
+addedPins
+});
+}
+}
+});
+
+newNets.forEach(net => {
+
+if(!oldDB.nets[net]){
+result.nets.added.push(net);
+}
+});
+
+result.summary.componentsAdded = result.components.added.length;
+result.summary.componentsDeleted = result.components.deleted.length;
+result.summary.componentsChanged = result.components.changed.length;
+
+result.summary.netsAdded = result.nets.added.length;
+result.summary.netsDeleted = result.nets.deleted.length;
+result.summary.netsChanged = result.nets.changed.length;
+
+return result;
+}
+
+function renderReport(data, oldFile, newFile){
+
+const report = document.getElementById('reportArea');
+
+report.innerHTML = `
+
+<div id="summary" class="section searchable">
+
+<div class="section-title">
+Summary Information
+</div>
+
+<div class="subsection">
+
+<table class="summary-table">
+
+<tr>
+<th>Parameter</th>
+<th>New Design</th>
+<th>Reference Design</th>
+</tr>
+
+<tr>
+<td>File Name</td>
+<td>{oldFile}</td>
+</tr>
+
+<tr>
+<td>Number of Components</td>
+<td>{data.summary.oldComponentCount}</td>
+</tr>
+
+<tr>
+<td>Components Added</td>
+<td colspan="2">$`{data.summary.componentsAdded}</td>
+</tr>
+
+<tr>
+<td>Components Deleted</td>
+<td colspan="2">`${data.summary.componentsDeleted}</td>
+</tr>
+
+<tr>
+<td>Changed Components</td>
+<td colspan="2">$`{data.summary.componentsChanged}</td>
+</tr>
+
+<tr>
+<td>Number of Nets</td>
+<td>${data.summary.newNetCount}&lt;/td&gt; &lt;td&gt;${data.summary.oldNetCount}</td>
+</tr>
+
+<tr>
+<td>Nets Added</td>
+<td colspan="2">`${data.summary.netsAdded}</td>
+</tr>
+
+<tr>
+<td>Nets Deleted</td>
+<td colspan="2">$`{data.summary.netsDeleted}</td>
+</tr>
+
+<tr>
+<td>Connectivity Changes</td>
+<td colspan="2">`${data.summary.netsChanged}</td>
+</tr>
+
+</table>
+
+</div>
+
+</div>
+
+$`{renderComponents(data.components)}
+
+`${renderNets(data.nets)}
+
+$`{renderConnectivity(data.connectivity)}
+
+`;
+}
+
+function renderComponents(components){
+
+return `
+
+<div id="components" class="section searchable">
+
+<div class="section-title">
+Component Report
+</div>
+
+<div class="subsection">
+
+<h3>Added Components</h3>
+
+<table class="report-table">
+<tr>
+<th>Component</th>
+</tr>
+
+${components.added.map(c =&gt;
+<tr class="added">
+<td>${c}&lt;/td&gt; &lt;/tr&gt;).join('')}
+
+</table>
+
+<h3>Deleted Components</h3>
+
+<table class="report-table">
+<tr>
+<th>Component</th>
+</tr>
+
+${components.deleted.map(c =&gt;
+<tr class="removed">
+<td>${c}&lt;/td&gt; &lt;/tr&gt;).join('')}
+
+</table>
+
+<h3>Changed Components</h3>
+
+<table class="report-table">
+
+<tr>
+<th>Component</th>
+<th>Old</th>
+<th>New</th>
+</tr>
+
+${components.changed.map(c =&gt;
+<tr class="modified">
+<td>{c.oldValue}</td>
+<td>${c.newValue}&lt;/td&gt; &lt;/tr&gt;).join('')}
+
+</table>
+
+</div>
+
+</div>
+
+`;
+}
+
+function renderNets(nets){
+
+return `
+
+<div id="nets" class="section searchable">
+
+<div class="section-title">
+Net Report
+</div>
+
+<div class="subsection">
+
+<h3>Added Nets</h3>
+
+<table class="report-table">
+
+<tr>
+<th>Net</th>
+</tr>
+
+${nets.added.map(n =&gt;
+<tr class="added">
+<td>${n}&lt;/td&gt; &lt;/tr&gt;).join('')}
+
+</table>
+
+<h3>Deleted Nets</h3>
+
+<table class="report-table">
+
+<tr>
+<th>Net</th>
+</tr>
+
+${nets.deleted.map(n =&gt;
+<tr class="removed">
+<td>${n}&lt;/td&gt; &lt;/tr&gt;).join('')}
+
+</table>
+
+<h3>Changed Nets</h3>
+
+<table class="report-table">
+
+<tr>
+<th>Net</th>
+</tr>
+
+${nets.changed.map(n =&gt;
+<tr class="modified">
+<td>${n}&lt;/td&gt; &lt;/tr&gt;).join('')}
+
+</table>
+
+</div>
+
+</div>
+
+`;
+}
+
+function renderConnectivity(connectivity){
+
+return `
+
+<div id="connectivity" class="section searchable">
+
+<div class="section-title">
+Connectivity Changes
+</div>
+
+<div class="subsection">
+
+<table class="report-table">
+
+<tr>
+<th>Net</th>
+<th>Added Pins</th>
+<th>Removed Pins</th>
+</tr>
+
+${connectivity.map(c =&gt;
+
+<tr class="modified">
+
+<td>$`{c.net}</td>
+
+<td>
+<pre>`${c.addedPins.join('\n')}</pre>
+</td>
+
+<td>
+<pre>${c.removedPins.join('\n')}</pre>
+</td>
+
+</tr>
+
+`).join('')}
+
+</table>
+
+</div>
+
+</div>
+
+`;
+}
+
+function filterResults(){
+
+const value = document.getElementById('searchInput')
+.value
+.toLowerCase();
+
+document.querySelectorAll('.searchable').forEach(section => {
+
+const text = section.innerText.toLowerCase();
+
+if(text.includes(value)){
+section.style.display = 'block';
+}
+else{
+section.style.display = 'none';
+}
+});
+}
+
+function downloadHTMLReport(){
+
+const reportHTML = document.documentElement.outerHTML;
+
+const blob = new Blob([reportHTML], {type:'text/html'});
+
+const link = document.createElement('a');
+
+link.href = URL.createObjectURL(blob);
+link.download = 'comparison_report.html';
+
+link.click();
+}
+
+</script>
+
+</body>
+</html>
