@@ -3,201 +3,201 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Siemens KYN Net Comparator</title>
+<title>Siemens Net Comparator</title>
 
 <style>
 *{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Segoe UI, Arial, sans-serif;
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Segoe UI, Arial, sans-serif;
 }
 
 body{
-background:#f3f5f7;
-color:#222;
-padding:20px;
+    background:#f3f5f7;
+    color:#222;
+    padding:20px;
 }
 
 h1{
-text-align:center;
-margin-bottom:20px;
-color:#003366;
+    text-align:center;
+    margin-bottom:20px;
+    color:#003366;
 }
 
 .container{
-max-width:1600px;
-margin:auto;
+    max-width:1600px;
+    margin:auto;
 }
 
 .upload-box{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:20px;
-margin-bottom:20px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+    margin-bottom:20px;
 }
 
 .card{
-background:white;
-padding:20px;
-border-radius:10px;
-border:1px solid #ccc;
-box-shadow:0 2px 5px rgba(0,0,0,0.08);
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    border:1px solid #ccc;
+    box-shadow:0 2px 5px rgba(0,0,0,0.08);
 }
 
 .card h2{
-margin-bottom:15px;
-color:#003366;
+    margin-bottom:15px;
+    color:#003366;
 }
 
 input[type=file]{
-width:100%;
-padding:12px;
-border:1px solid #bbb;
-border-radius:6px;
+    width:100%;
+    padding:12px;
+    border:1px solid #bbb;
+    border-radius:6px;
 }
 
 .button-group{
-display:flex;
-gap:15px;
-margin-bottom:25px;
-flex-wrap:wrap;
+    display:flex;
+    gap:15px;
+    margin-bottom:25px;
+    flex-wrap:wrap;
 }
 
 button{
-background:#003366;
-color:white;
-border:none;
-padding:12px 20px;
-border-radius:6px;
-cursor:pointer;
-font-weight:bold;
+    background:#003366;
+    color:white;
+    border:none;
+    padding:12px 20px;
+    border-radius:6px;
+    cursor:pointer;
+    font-weight:bold;
 }
 
 button:hover{
-background:#0055aa;
+    background:#0055aa;
 }
 
 .summary-table{
-width:100%;
-border-collapse:collapse;
-margin-bottom:30px;
-background:white;
+    width:100%;
+    border-collapse:collapse;
+    margin-bottom:30px;
+    background:white;
 }
 
 .summary-table th,
 .summary-table td{
-border:1px solid #bbb;
-padding:10px;
-text-align:left;
+    border:1px solid #bbb;
+    padding:10px;
+    text-align:left;
 }
 
 .summary-table th{
-background:#d9e5f2;
+    background:#d9e5f2;
 }
 
 .section{
-margin-bottom:30px;
-background:white;
-border-radius:10px;
-overflow:hidden;
-border:1px solid #ccc;
+    margin-bottom:30px;
+    background:white;
+    border-radius:10px;
+    overflow:hidden;
+    border:1px solid #ccc;
 }
 
 .section-title{
-background:#003366;
-color:white;
-padding:15px;
-font-size:20px;
-font-weight:bold;
+    background:#003366;
+    color:white;
+    padding:15px;
+    font-size:20px;
+    font-weight:bold;
 }
 
 .subsection{
-padding:15px;
+    padding:15px;
 }
 
 .subsection h3{
-margin-bottom:10px;
-color:#003366;
+    margin-bottom:10px;
+    color:#003366;
 }
 
 .report-table{
-width:100%;
-border-collapse:collapse;
-margin-bottom:20px;
+    width:100%;
+    border-collapse:collapse;
+    margin-bottom:20px;
 }
 
 .report-table th,
 .report-table td{
-border:1px solid #ccc;
-padding:8px;
-vertical-align:top;
-word-break:break-word;
+    border:1px solid #ccc;
+    padding:8px;
+    vertical-align:top;
+    word-break:break-word;
 }
 
 .report-table th{
-background:#efefef;
+    background:#efefef;
 }
 
 .added{
-background:#d8f5d8;
+    background:#d8f5d8;
 }
 
 .removed{
-background:#ffd6d6;
+    background:#ffd6d6;
 }
 
 .modified{
-background:#fff2cc;
+    background:#fff2cc;
 }
 
 .search-bar{
-margin-bottom:20px;
+    margin-bottom:20px;
 }
 
 .search-bar input{
-width:100%;
-padding:12px;
-border:1px solid #bbb;
-border-radius:6px;
-font-size:16px;
+    width:100%;
+    padding:12px;
+    border:1px solid #bbb;
+    border-radius:6px;
+    font-size:16px;
 }
 
 .anchor-links{
-margin-bottom:20px;
-display:flex;
-gap:10px;
-flex-wrap:wrap;
+    margin-bottom:20px;
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
 }
 
 .anchor-links a{
-background:#003366;
-color:white;
-text-decoration:none;
-padding:8px 15px;
-border-radius:6px;
+    background:#003366;
+    color:white;
+    text-decoration:none;
+    padding:8px 15px;
+    border-radius:6px;
 }
 
 .anchor-links a:hover{
-background:#0055aa;
+    background:#0055aa;
 }
 
 pre{
-white-space:pre-wrap;
+    white-space:pre-wrap;
 }
 
 @media print{
-button,
-.upload-box,
-.search-bar,
-.button-group,
-.anchor-links{
-display:none;
-}
+    button,
+    .upload-box,
+    .search-bar,
+    .button-group,
+    .anchor-links{
+        display:none;
+    }
 
-body{
-background:white;
-}
+    body{
+        background:white;
+    }
 }
 </style>
 </head>
@@ -248,532 +248,548 @@ let comparisonData = {};
 
 async function runComparison(){
 
-const oldFile = document.getElementById('oldFile').files[0];
-const newFile = document.getElementById('newFile').files[0];
+    const oldFile = document.getElementById('oldFile').files[0];
+    const newFile = document.getElementById('newFile').files[0];
 
-if(!oldFile || !newFile){
-alert('Please upload both OLD and NEW KYN/TXT files');
-return;
-}
+    if(!oldFile || !newFile){
+        alert('Please upload both OLD and NEW KYN/TXT files');
+        return;
+    }
 
-const oldText = await oldFile.text();
-const newText = await newFile.text();
+    const oldText = await oldFile.text();
+    const newText = await newFile.text();
 
-const oldDB = buildDatabase(oldText);
-const newDB = buildDatabase(newText);
+    const oldDB = buildDatabase(oldText);
+    const newDB = buildDatabase(newText);
 
-comparisonData = compareDesigns(oldDB, newDB);
+    comparisonData = compareDesigns(oldDB, newDB);
 
-renderReport(comparisonData, oldFile.name, newFile.name);
+    renderReport(comparisonData, oldFile.name, newFile.name);
 }
 
 function extractSection(content, startTag, endTag){
 
-const start = content.indexOf(startTag);
-const end = content.indexOf(endTag);
+    const start = content.indexOf(startTag);
+    const end = content.indexOf(endTag);
 
-if(start === -1 || end === -1) return '';
+    if(start === -1 || end === -1) return '';
 
-return content.substring(start + startTag.length, end).trim();
+    return content.substring(start + startTag.length, end).trim();
 }
 
 function parseCompProps(section){
 
-const obj = {};
+    const obj = {};
 
-section.split('\n').forEach(line => {
+    section.split('\n').forEach(line => {
 
-line = line.trim();
+        line = line.trim();
 
-if(!line || line.startsWith('#')) return;
+        if(!line || line.startsWith('#')) return;
 
-const idx = line.indexOf(':');
+        const idx = line.indexOf(':');
 
-if(idx === -1) return;
+        if(idx === -1) return;
 
-const ref = line.substring(0, idx).trim();
-const value = line.substring(idx + 1).trim();
+        const ref = line.substring(0, idx).trim();
+        const value = line.substring(idx + 1).trim();
 
-obj[ref] = value;
-});
+        obj[ref] = value;
+    });
 
-return obj;
+    return obj;
 }
 
 function parseCompPins(section){
 
-const obj = {};
+    const obj = {};
 
-section.split('\n').forEach(line => {
+    section.split('\n').forEach(line => {
 
-line = line.trim();
+        line = line.trim();
 
-if(!line || line.startsWith('#')) return;
+        if(!line || line.startsWith('#')) return;
 
-const idx = line.indexOf('((');
+        const idx = line.indexOf('((');
 
-if(idx === -1) return;
+        if(idx === -1) return;
 
-const ref = line.substring(0, idx).trim();
-const pins = line.substring(idx).trim();
+        const ref = line.substring(0, idx).trim();
+        const pins = line.substring(idx).trim();
 
-obj[ref] = pins;
-});
+        obj[ref] = pins;
+    });
 
-return obj;
+    return obj;
 }
 
 function parseENets(section){
 
-const obj = {};
+    const obj = {};
 
-section.split('\n').forEach(line => {
+    section.split('\n').forEach(line => {
 
-line = line.trim();
+        line = line.trim();
 
-if(!line || line.startsWith('#')) return;
+        if(!line || line.startsWith('#')) return;
 
-const idx = line.indexOf(':');
+        const idx = line.indexOf(':');
 
-if(idx === -1) return;
+        if(idx === -1) return;
 
-const key = line.substring(0, idx).trim();
-const value = line.substring(idx + 1).trim();
+        const key = line.substring(0, idx).trim();
+        const value = line.substring(idx + 1).trim();
 
-obj[key] = value;
-});
+        obj[key] = value;
+    });
 
-return obj;
+    return obj;
 }
 
 function parseNets(section){
 
-const obj = {};
+    const obj = {};
 
-section.split('\n').forEach(line => {
+    section.split('\n').forEach(line => {
 
-line = line.trim();
+        line = line.trim();
 
-if(!line || line.startsWith('#')) return;
+        if(!line || line.startsWith('#')) return;
 
-const idx = line.indexOf(':');
+        const idx = line.indexOf(':');
 
-if(idx === -1) return;
+        if(idx === -1) return;
 
-const netName = line.substring(0, idx).trim();
+        const netName = line.substring(0, idx).trim();
 
-const pins = line.substring(idx + 1)
-.replace(';','')
-.split(',')
-.map(x => x.trim())
-.filter(Boolean)
-.sort();
+        const pins = line.substring(idx + 1)
+            .replace(';','')
+            .split(',')
+            .map(x => x.trim())
+            .filter(Boolean)
+            .sort();
 
-obj[netName] = pins;
-});
+        obj[netName] = pins;
+    });
 
-return obj;
+    return obj;
 }
 
 function buildDatabase(content){
 
-return {
+    return {
 
-compprops: parseCompProps(
-extractSection(content, 'BEGIN_COMPPROPS', 'END_COMPPROPS')
-),
+        compprops: parseCompProps(
+            extractSection(content, 'BEGIN_COMPPROPS', 'END_COMPPROPS')
+        ),
 
-comppins: parseCompPins(
-extractSection(content, 'BEGIN_COMPPINS', 'END_COMPPINS')
-),
+        comppins: parseCompPins(
+            extractSection(content, 'BEGIN_COMPPINS', 'END_COMPPINS')
+        ),
 
-enets: parseENets(
-extractSection(content, 'BEGIN_E-NETS', 'END_E-NETS')
-),
+        enets: parseENets(
+            extractSection(content, 'BEGIN_E-NETS', 'END_E-NETS')
+        ),
 
-nets: parseNets(
-extractSection(content, 'BEGIN_NETS', 'END_NETS')
-)
-};
+        nets: parseNets(
+            extractSection(content, 'BEGIN_NETS', 'END_NETS')
+        )
+    };
 }
 
 function compareDesigns(oldDB, newDB){
 
-const result = {
-summary:{},
-components:{
-added:[],
-deleted:[],
-changed:[]
-},
-nets:{
-added:[],
-deleted:[],
-changed:[]
-},
-connectivity:[]
-};
+    const result = {
+        summary:{},
+        components:{
+            added:[],
+            deleted:[],
+            changed:[]
+        },
+        nets:{
+            added:[],
+            deleted:[],
+            changed:[]
+        },
+        connectivity:[]
+    };
 
-const oldComponents = Object.keys(oldDB.compprops);
-const newComponents = Object.keys(newDB.compprops);
+    const oldComponents = Object.keys(oldDB.compprops);
+    const newComponents = Object.keys(newDB.compprops);
 
-result.summary.oldComponentCount = oldComponents.length;
-result.summary.newComponentCount = newComponents.length;
+    result.summary.oldComponentCount = oldComponents.length;
+    result.summary.newComponentCount = newComponents.length;
 
-oldComponents.forEach(comp => {
+    oldComponents.forEach(comp => {
 
-if(!newDB.compprops[comp]){
-result.components.deleted.push(comp);
-}
-else if(oldDB.compprops[comp] !== newDB.compprops[comp]){
-result.components.changed.push({
-component:comp,
-oldValue:oldDB.compprops[comp],
-newValue:newDB.compprops[comp]
-});
-}
-});
+        if(!newDB.compprops[comp]){
+            result.components.deleted.push(comp);
+        }
+        else if(oldDB.compprops[comp] !== newDB.compprops[comp]){
+            result.components.changed.push({
+                component:comp,
+                oldValue:oldDB.compprops[comp],
+                newValue:newDB.compprops[comp]
+            });
+        }
+    });
 
-newComponents.forEach(comp => {
+    newComponents.forEach(comp => {
 
-if(!oldDB.compprops[comp]){
-result.components.added.push(comp);
-}
-});
+        if(!oldDB.compprops[comp]){
+            result.components.added.push(comp);
+        }
+    });
 
-const oldNets = Object.keys(oldDB.nets);
-const newNets = Object.keys(newDB.nets);
+    const oldNets = Object.keys(oldDB.nets);
+    const newNets = Object.keys(newDB.nets);
 
-result.summary.oldNetCount = oldNets.length;
-result.summary.newNetCount = newNets.length;
+    result.summary.oldNetCount = oldNets.length;
+    result.summary.newNetCount = newNets.length;
 
-oldNets.forEach(net => {
+    oldNets.forEach(net => {
 
-if(!newDB.nets[net]){
-result.nets.deleted.push(net);
-}
-else{
+        if(!newDB.nets[net]){
+            result.nets.deleted.push(net);
+        }
+        else{
 
-const oldPins = oldDB.nets[net];
-const newPins = newDB.nets[net];
+            const oldPins = oldDB.nets[net];
+            const newPins = newDB.nets[net];
 
-const removedPins = oldPins.filter(x => !newPins.includes(x));
-const addedPins = newPins.filter(x => !oldPins.includes(x));
+            const removedPins = oldPins.filter(x => !newPins.includes(x));
+            const addedPins = newPins.filter(x => !oldPins.includes(x));
 
-if(removedPins.length || addedPins.length){
+            if(removedPins.length || addedPins.length){
 
-result.nets.changed.push(net);
+                result.nets.changed.push(net);
 
-result.connectivity.push({
-net,
-removedPins,
-addedPins
-});
-}
-}
-});
+                result.connectivity.push({
+                    net,
+                    removedPins,
+                    addedPins
+                });
+            }
+        }
+    });
 
-newNets.forEach(net => {
+    newNets.forEach(net => {
 
-if(!oldDB.nets[net]){
-result.nets.added.push(net);
-}
-});
+        if(!oldDB.nets[net]){
+            result.nets.added.push(net);
+        }
+    });
 
-result.summary.componentsAdded = result.components.added.length;
-result.summary.componentsDeleted = result.components.deleted.length;
-result.summary.componentsChanged = result.components.changed.length;
+    result.summary.componentsAdded = result.components.added.length;
+    result.summary.componentsDeleted = result.components.deleted.length;
+    result.summary.componentsChanged = result.components.changed.length;
 
-result.summary.netsAdded = result.nets.added.length;
-result.summary.netsDeleted = result.nets.deleted.length;
-result.summary.netsChanged = result.nets.changed.length;
+    result.summary.netsAdded = result.nets.added.length;
+    result.summary.netsDeleted = result.nets.deleted.length;
+    result.summary.netsChanged = result.nets.changed.length;
 
-return result;
+    return result;
 }
 
 function renderReport(data, oldFile, newFile){
 
-const report = document.getElementById('reportArea');
+    const report = document.getElementById('reportArea');
 
-report.innerHTML = `
+    report.innerHTML = `
 
-<div id="summary" class="section searchable">
+    <div id="summary" class="section searchable">
 
-<div class="section-title">
-Summary Information
-</div>
+    <div class="section-title">
+    Summary Information
+    </div>
 
-<div class="subsection">
+    <div class="subsection">
 
-<table class="summary-table">
+    <table class="summary-table">
 
-<tr>
-<th>Parameter</th>
-<th>New Design</th>
-<th>Reference Design</th>
-</tr>
+    <tr>
+    <th>Parameter</th>
+    <th>New Design</th>
+    <th>Reference Design</th>
+    </tr>
 
-<tr>
-<td>File Name</td>
-<td>{oldFile}</td>
-</tr>
+    <tr>
+    <td>File Name</td>
+    <td>${newFile}</td>
+    <td>${oldFile}</td>
+    </tr>
 
-<tr>
-<td>Number of Components</td>
-<td>{data.summary.oldComponentCount}</td>
-</tr>
+    <tr>
+    <td>Number of Components</td>
+    <td>${data.summary.newComponentCount}</td>
+    <td>${data.summary.oldComponentCount}</td>
+    </tr>
 
-<tr>
-<td>Components Added</td>
-<td colspan="2">$`{data.summary.componentsAdded}</td>
-</tr>
+    <tr>
+    <td>Components Added</td>
+    <td colspan="2">${data.summary.componentsAdded}</td>
+    </tr>
 
-<tr>
-<td>Components Deleted</td>
-<td colspan="2">`${data.summary.componentsDeleted}</td>
-</tr>
+    <tr>
+    <td>Components Deleted</td>
+    <td colspan="2">${data.summary.componentsDeleted}</td>
+    </tr>
 
-<tr>
-<td>Changed Components</td>
-<td colspan="2">$`{data.summary.componentsChanged}</td>
-</tr>
+    <tr>
+    <td>Changed Components</td>
+    <td colspan="2">${data.summary.componentsChanged}</td>
+    </tr>
 
-<tr>
-<td>Number of Nets</td>
-<td>${data.summary.newNetCount}&lt;/td&gt; &lt;td&gt;${data.summary.oldNetCount}</td>
-</tr>
+    <tr>
+    <td>Number of Nets</td>
+    <td>${data.summary.newNetCount}</td>
+    <td>${data.summary.oldNetCount}</td>
+    </tr>
 
-<tr>
-<td>Nets Added</td>
-<td colspan="2">`${data.summary.netsAdded}</td>
-</tr>
+    <tr>
+    <td>Nets Added</td>
+    <td colspan="2">${data.summary.netsAdded}</td>
+    </tr>
 
-<tr>
-<td>Nets Deleted</td>
-<td colspan="2">$`{data.summary.netsDeleted}</td>
-</tr>
+    <tr>
+    <td>Nets Deleted</td>
+    <td colspan="2">${data.summary.netsDeleted}</td>
+    </tr>
 
-<tr>
-<td>Connectivity Changes</td>
-<td colspan="2">`${data.summary.netsChanged}</td>
-</tr>
+    <tr>
+    <td>Connectivity Changes</td>
+    <td colspan="2">${data.summary.netsChanged}</td>
+    </tr>
 
-</table>
+    </table>
 
-</div>
+    </div>
 
-</div>
+    </div>
 
-$`{renderComponents(data.components)}
+    ${renderComponents(data.components)}
 
-`${renderNets(data.nets)}
+    ${renderNets(data.nets)}
 
-$`{renderConnectivity(data.connectivity)}
+    ${renderConnectivity(data.connectivity)}
 
-`;
+    `;
 }
 
 function renderComponents(components){
 
-return `
+    return `
 
-<div id="components" class="section searchable">
+    <div id="components" class="section searchable">
 
-<div class="section-title">
-Component Report
-</div>
+    <div class="section-title">
+    Component Report
+    </div>
 
-<div class="subsection">
+    <div class="subsection">
 
-<h3>Added Components</h3>
+    <h3>Added Components</h3>
 
-<table class="report-table">
-<tr>
-<th>Component</th>
-</tr>
+    <table class="report-table">
+    <tr>
+    <th>Component</th>
+    </tr>
 
-${components.added.map(c =&gt;
-<tr class="added">
-<td>${c}&lt;/td&gt; &lt;/tr&gt;).join('')}
+    ${components.added.map(c => `
+    <tr class="added">
+    <td>${c}</td>
+    </tr>
+    `).join('')}
 
-</table>
+    </table>
 
-<h3>Deleted Components</h3>
+    <h3>Deleted Components</h3>
 
-<table class="report-table">
-<tr>
-<th>Component</th>
-</tr>
+    <table class="report-table">
+    <tr>
+    <th>Component</th>
+    </tr>
 
-${components.deleted.map(c =&gt;
-<tr class="removed">
-<td>${c}&lt;/td&gt; &lt;/tr&gt;).join('')}
+    ${components.deleted.map(c => `
+    <tr class="removed">
+    <td>${c}</td>
+    </tr>
+    `).join('')}
 
-</table>
+    </table>
 
-<h3>Changed Components</h3>
+    <h3>Changed Components</h3>
 
-<table class="report-table">
+    <table class="report-table">
 
-<tr>
-<th>Component</th>
-<th>Old</th>
-<th>New</th>
-</tr>
+    <tr>
+    <th>Component</th>
+    <th>Old</th>
+    <th>New</th>
+    </tr>
 
-${components.changed.map(c =&gt;
-<tr class="modified">
-<td>{c.oldValue}</td>
-<td>${c.newValue}&lt;/td&gt; &lt;/tr&gt;).join('')}
+    ${components.changed.map(c => `
+    <tr class="modified">
+    <td>${c.component}</td>
+    <td>${c.oldValue}</td>
+    <td>${c.newValue}</td>
+    </tr>
+    `).join('')}
 
-</table>
+    </table>
 
-</div>
+    </div>
 
-</div>
+    </div>
 
-`;
+    `;
 }
 
 function renderNets(nets){
 
-return `
+    return `
 
-<div id="nets" class="section searchable">
+    <div id="nets" class="section searchable">
 
-<div class="section-title">
-Net Report
-</div>
+    <div class="section-title">
+    Net Report
+    </div>
 
-<div class="subsection">
+    <div class="subsection">
 
-<h3>Added Nets</h3>
+    <h3>Added Nets</h3>
 
-<table class="report-table">
+    <table class="report-table">
 
-<tr>
-<th>Net</th>
-</tr>
+    <tr>
+    <th>Net</th>
+    </tr>
 
-${nets.added.map(n =&gt;
-<tr class="added">
-<td>${n}&lt;/td&gt; &lt;/tr&gt;).join('')}
+    ${nets.added.map(n => `
+    <tr class="added">
+    <td>${n}</td>
+    </tr>
+    `).join('')}
 
-</table>
+    </table>
 
-<h3>Deleted Nets</h3>
+    <h3>Deleted Nets</h3>
 
-<table class="report-table">
+    <table class="report-table">
 
-<tr>
-<th>Net</th>
-</tr>
+    <tr>
+    <th>Net</th>
+    </tr>
 
-${nets.deleted.map(n =&gt;
-<tr class="removed">
-<td>${n}&lt;/td&gt; &lt;/tr&gt;).join('')}
+    ${nets.deleted.map(n => `
+    <tr class="removed">
+    <td>${n}</td>
+    </tr>
+    `).join('')}
 
-</table>
+    </table>
 
-<h3>Changed Nets</h3>
+    <h3>Changed Nets</h3>
 
-<table class="report-table">
+    <table class="report-table">
 
-<tr>
-<th>Net</th>
-</tr>
+    <tr>
+    <th>Net</th>
+    </tr>
 
-${nets.changed.map(n =&gt;
-<tr class="modified">
-<td>${n}&lt;/td&gt; &lt;/tr&gt;).join('')}
+    ${nets.changed.map(n => `
+    <tr class="modified">
+    <td>${n}</td>
+    </tr>
+    `).join('')}
 
-</table>
+    </table>
 
-</div>
+    </div>
 
-</div>
+    </div>
 
-`;
+    `;
 }
 
 function renderConnectivity(connectivity){
 
-return `
+    return `
 
-<div id="connectivity" class="section searchable">
+    <div id="connectivity" class="section searchable">
 
-<div class="section-title">
-Connectivity Changes
-</div>
+    <div class="section-title">
+    Connectivity Changes
+    </div>
 
-<div class="subsection">
+    <div class="subsection">
 
-<table class="report-table">
+    <table class="report-table">
 
-<tr>
-<th>Net</th>
-<th>Added Pins</th>
-<th>Removed Pins</th>
-</tr>
+    <tr>
+    <th>Net</th>
+    <th>Added Pins</th>
+    <th>Removed Pins</th>
+    </tr>
 
-${connectivity.map(c =&gt;
+    ${connectivity.map(c => `
 
-<tr class="modified">
+    <tr class="modified">
 
-<td>$`{c.net}</td>
+    <td>${c.net}</td>
 
-<td>
-<pre>`${c.addedPins.join('\n')}</pre>
-</td>
+    <td>
+    <pre>${c.addedPins.join('\n')}</pre>
+    </td>
 
-<td>
-<pre>${c.removedPins.join('\n')}</pre>
-</td>
+    <td>
+    <pre>${c.removedPins.join('\n')}</pre>
+    </td>
 
-</tr>
+    </tr>
 
-`).join('')}
+    `).join('')}
 
-</table>
+    </table>
 
-</div>
+    </div>
 
-</div>
+    </div>
 
-`;
+    `;
 }
 
 function filterResults(){
 
-const value = document.getElementById('searchInput')
-.value
-.toLowerCase();
+    const value = document.getElementById('searchInput')
+        .value
+        .toLowerCase();
 
-document.querySelectorAll('.searchable').forEach(section => {
+    document.querySelectorAll('.searchable').forEach(section => {
 
-const text = section.innerText.toLowerCase();
+        const text = section.innerText.toLowerCase();
 
-if(text.includes(value)){
-section.style.display = 'block';
-}
-else{
-section.style.display = 'none';
-}
-});
+        if(text.includes(value)){
+            section.style.display = 'block';
+        }
+        else{
+            section.style.display = 'none';
+        }
+    });
 }
 
 function downloadHTMLReport(){
 
-const reportHTML = document.documentElement.outerHTML;
+    const reportHTML = document.documentElement.outerHTML;
 
-const blob = new Blob([reportHTML], {type:'text/html'});
+    const blob = new Blob([reportHTML], {type:'text/html'});
 
-const link = document.createElement('a');
+    const link = document.createElement('a');
 
-link.href = URL.createObjectURL(blob);
-link.download = 'comparison_report.html';
+    link.href = URL.createObjectURL(blob);
+    link.download = 'comparison_report.html';
 
-link.click();
+    link.click();
 }
 
 </script>
