@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Professional Siemens KYN Comparator</title>
+
+<style>
+body{
+    font-family:Arial, sans-serif;
+    background:#f2f2f2;
+    margin:20px;
+    color:#111;
+}
+
+h1{
+    text-align:center;
+    color:#1b3b5f;
+    margin-bottom:25px;
+}
+
+.container{
+    width:98%;
+    margin:auto;
+}
+
+.upload-panel{
+    display:flex;
+    gap:20px;
+    margin-bottom:20px;
+}
+
+.box{
+    flex:1;
+    background:white;
+    border:1px solid #bbb;
+    padding:15px;
+    border-radius:5px;
+}
+
+.box h3{
+    margin-bottom:10px;
+    color:#1b3b5f;
+}
+
+input[type=file]{
+    width:100%;
+    padding:10px;
+}
+
+button{
+    background:#1b3b5f;
+    color:white;
+    border:none;
+    padding:12px 20px;
+    cursor:pointer;
+    margin-right:10px;
+    border-radius:4px;
+    font-weight:bold;
+}
+
+button:hover{
+    background:#29598b;
+}
+
+.report-section{
+    margin-top:20px;
+    background:white;
+    border:1px solid #999;
+}
+
+.section-title{
+    background:#d7d7d7;
+    padding:8px;
+    font-weight:bold;
+    border-bottom:1px solid #999;
+}
+
+.report-table{
+    width:100%;
+    border-collapse:collapse;
+    table-layout:fixed;
+}
+
+.report-table th,
+.report-table td{
+    border:1px solid #bbb;
+    padding:6px;
+    vertical-align:top;
+    word-wrap:break-word;
+    font-size:13px;
+}
+
+.report-table th{
+    background:#efefef;
+}
+
+.added{
+    background:#d9ffd9;
+}
+
+.deleted{
+    background:#ffd9d9;
+}
+
+.modified{
+    background:#fff6cc;
+}
+
+.summary-table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.summary-table td,
+.summary-table th{
+    border:1px solid #999;
+    padding:6px;
+}
+
+.summary-table th{
+    background:#ececec;
+}
+
+.top-links{
+    margin-bottom:15px;
+}
+
+.top-links a{
+    margin-right:15px;
+    color:#1b3b5f;
+    font-weight:bold;
+}
+
+pre{
+    white-space:pre-wrap;
+    font-family:Consolas;
+}
+
+@media print{
+
+    .upload-panel,
+    .action-buttons{
+        display:none;
+    }
+
+    body{
+        background:white;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>DOCTAR Style Siemens KYN Comparator</h1>
+
+<div class="upload-panel">
+
+<div class="box">
+<h3>Reference Design (OLD)</h3>
+<input type="file" id="oldFile">
+</div>
+
+<div class="box">
+<h3>New Design (NEW)</h3>
+<input type="file" id="newFile">
+</div>
+
+</div>
+
+<div class="action-buttons">
+<button onclick="compareKYN()">Generate Report</button>
+<button onclick="downloadReport()">Download HTML</button>
+<button onclick="window.print()">Print / Save PDF</button>
+</div>
+
+<div class="top-links">
+<a href="#summary">Summary</a>
+<a href="#components">Components</a>
+<a href="#nets">Nets</a>
+<a href="#connectivity">Connectivity</a>
+</div>
+
+<div id="report"></div>
+
+</div>
+
+<script>
+
+let generatedReportHTML = '';
+
+async function compareKYN(){
+
+    const oldFile = document.getElementById('oldFile').files[0];
+    const newFile = document.getElementById('newFile').files[0];
+
+    if(!oldFile || !newFile){
+        alert('Please upload both KYN files');
+        return;
+    }
+
+    const oldText = await oldFile.text();
+    const newText = await newFile.text();
+
+    const oldDB = parseKYN(oldText);
+    const newDB = parseKYN(newText);
+
+    const result = generateComparison(oldDB, newDB);
+
+    renderReport(result, oldFile.name, newFile.name);
+}
+
+function getSection(content, startTag, endTag){
+
+    const start = content.indexOf(startTag);
+    const end = content.indexOf(endTag);
+
+    if(start === -1 || end === -1) return '';
+
+    return content.substring(start + startTag.length, end).trim();
+}
+
+function parseKYN(content){
+
+    return {
+        compprops: parseCompProps(getSection(content,'BEGIN_COMPPROPS','END_COMPPROPS')),
+        nets: parseNets(getSection(content,'BEGIN_NETS','END_NETS'))
+    };
+}
+
+function parseCompProps(section){
+
+    const data = {};
+
+    section.split('\n').forEach(line => {
+
+        line = line.trim();
+
+        if(!line || line.startsWith('#')) return;
+
+        const idx = line.indexOf(':');
+
+        if(idx === -1) return;
+
+        const ref = line.substring(0, idx).trim();
+        const value = line.substring(idx + 1).trim();
+
+        data[ref] = value;
+    });
+
+    return data;
+}
+
+function parseNets(section){
+
+    const data = {};
+
+    section.split('\n').forEach(line => {
+
+        line = line.trim();
+
+        if(!line || line.startsWith('#')) return;
+
+        const idx = line.indexOf(':');
+
+        if(idx === -1) return;
+
+        const net = line.substring(0, idx).trim();
+
+        const pins = line.substring(idx + 1)
+            .replace(';','')
+            .split(',')
+            .map(x => x.trim())
+            .filter(Boolean)
+            .sort();
+
+        data[net] = pins;
+    });
+
+    return data;
+}
+
+function generateComparison(oldDB, newDB){
+
+    const report = {
+        summary:{},
+        components:{
+            added:[],
+            deleted:[],
+            modified:[]
+        },
+        nets:{
+            added:[],
+            deleted:[],
+            modified:[]
+        },
+        connectivity:[]
+    };
+
+    const oldComps = Object.keys(oldDB.compprops);
+    const newComps = Object.keys(newDB.compprops);
+
+    report.summary.oldComponents = oldComps.length;
+    report.summary.newComponents = newComps.length;
+
+    oldComps.forEach(comp => {
+
+        if(!newDB.compprops[comp]){
+            report.components.deleted.push(comp);
+        }
+        else if(oldDB.compprops[comp] !== newDB.compprops[comp]){
+
+            report.components.modified.push({
+                ref:comp,
+                oldValue:oldDB.compprops[comp],
+                newValue:newDB.compprops[comp]
+            });
+        }
+    });
+
+    newComps.forEach(comp => {
+
+        if(!oldDB.compprops[comp]){
+            report.components.added.push(comp);
+        }
+    });
+
+    const oldNets = Object.keys(oldDB.nets);
+    const newNets = Object.keys(newDB.nets);
+
+    report.summary.oldNets = oldNets.length;
+    report.summary.newNets = newNets.length;
+
+    oldNets.forEach(net => {
+
+        if(!newDB.nets[net]){
+            report.nets.deleted.push(net);
+        }
+        else{
+
+            const oldPins = oldDB.nets[net];
+            const newPins = newDB.nets[net];
+
+            const removedPins = oldPins.filter(x => !newPins.includes(x));
+            const addedPins = newPins.filter(x => !oldPins.includes(x));
+
+            if(removedPins.length || addedPins.length){
+
+                report.nets.modified.push(net);
+
+                report.connectivity.push({
+                    net,
+                    addedPins,
+                    removedPins
+                });
+            }
+        }
+    });
+
+    newNets.forEach(net => {
+
+        if(!oldDB.nets[net]){
+            report.nets.added.push(net);
+        }
+    });
+
+    return report;
+}
+
+function renderReport(data, oldName, newName){
+
+    const html = `
+
+<div id="summary" class="report-section">
+<div class="section-title">DOCTAR Design Change Summary Report</div>
+
+<table class="summary-table">
+<tr>
+<th>Parameter</th>
+<th>New Design</th>
+<th>Reference Design</th>
+</tr>
+
+<tr>
+<td>File Name</td>
+<td>${newName}</td>
+<td>${oldName}</td>
+</tr>
+
+<tr>
+<td>Number of Components</td>
+<td>${data.summary.newComponents}</td>
+<td>${data.summary.oldComponents}</td>
+</tr>
+
+<tr>
+<td>Components Added</td>
+<td colspan="2">${data.components.added.length}</td>
+</tr>
+
+<tr>
+<td>Components Deleted</td>
+<td colspan="2">${data.components.deleted.length}</td>
+</tr>
+
+<tr>
+<td>Changed Components</td>
+<td colspan="2">${data.components.modified.length}</td>
+</tr>
+
+<tr>
+<td>Number of Nets</td>
+<td>${data.summary.newNets}</td>
+<td>${data.summary.oldNets}</td>
+</tr>
+
+<tr>
+<td>Nets Added</td>
+<td colspan="2">${data.nets.added.length}</td>
+</tr>
+
+<tr>
+<td>Nets Deleted</td>
+<td colspan="2">${data.nets.deleted.length}</td>
+</tr>
+
+<tr>
+<td>Connectivity Changes</td>
+<td colspan="2">${data.connectivity.length}</td>
+</tr>
+
+</table>
+</div>
+
+<div id="components" class="report-section">
+<div class="section-title">Component Report</div>
+
+<table class="report-table">
+<tr>
+<th width="20%">Type</th>
+<th width="20%">Component</th>
+<th width="30%">Old</th>
+<th width="30%">New</th>
+</tr>
+
+${data.components.added.map(c => `
+<tr class="added">
+<td>Added</td>
+<td>${c}</td>
+<td>-</td>
+<td>Added Component</td>
+</tr>
+`).join('')}
+
+${data.components.deleted.map(c => `
+<tr class="deleted">
+<td>Deleted</td>
+<td>${c}</td>
+<td>Deleted Component</td>
+<td>-</td>
+</tr>
+`).join('')}
+
+${data.components.modified.map(c => `
+<tr class="modified">
+<td>Modified</td>
+<td>${c.ref}</td>
+<td>${c.oldValue}</td>
+<td>${c.newValue}</td>
+</tr>
+`).join('')}
+
+</table>
+</div>
+
+<div id="nets" class="report-section">
+<div class="section-title">Net Report</div>
+
+<table class="report-table">
+<tr>
+<th width="20%">Type</th>
+<th width="80%">Net Name</th>
+</tr>
+
+${data.nets.added.map(n => `
+<tr class="added">
+<td>Added</td>
+<td>${n}</td>
+</tr>
+`).join('')}
+
+${data.nets.deleted.map(n => `
+<tr class="deleted">
+<td>Deleted</td>
+<td>${n}</td>
+</tr>
+`).join('')}
+
+${data.nets.modified.map(n => `
+<tr class="modified">
+<td>Connectivity Change</td>
+<td>${n}</td>
+</tr>
+`).join('')}
+
+</table>
+</div>
+
+<div id="connectivity" class="report-section">
+<div class="section-title">Connectivity Change Report</div>
+
+<table class="report-table">
+<tr>
+<th width="20%">Net</th>
+<th width="40%">Added Pins</th>
+<th width="40%">Removed Pins</th>
+</tr>
+
+${data.connectivity.map(c => `
+<tr class="modified">
+<td>${c.net}</td>
+<td><pre>${c.addedPins.join('\n')}</pre></td>
+<td><pre>${c.removedPins.join('\n')}</pre></td>
+</tr>
+`).join('')}
+
+</table>
+</div>
+
+`;
+
+    generatedReportHTML = html;
+
+    document.getElementById('report').innerHTML = html;
+}
+
+function downloadReport(){
+
+    if(!generatedReportHTML){
+        alert('Generate report first');
+        return;
+    }
+
+    const fullHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+<title>DOCTAR Style Comparison Report</title>
+${document.querySelector('style').outerHTML}
+</head>
+<body>
+${generatedReportHTML}
+</body>
+</html>`;
+
+    const blob = new Blob([fullHTML], {type:'text/html'});
+
+    const a = document.createElement('a');
+
+    a.href = URL.createObjectURL(blob);
+    a.download = 'comparison_report.html';
+
+    a.click();
+}
+
+</script>
+
+</body>
+</html>
