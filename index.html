@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Siemens Schematic Net Comparator</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- External Libraries -->
+    <!-- SheetJS for Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- jsPDF for PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- jsPDF AutoTable for Tables in PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+    <!-- App Scripts -->
+    <script src="js/parser.js"></script>
+    <script src="js/comparator.js"></script>
+    <script src="js/report.js"></script>
+    <script src="js/export.js"></script>
+    <script src="js/app.js"></script>
+</head>
+<body>
+
+    <header>
+        <h1>Siemens Schematic Net Comparator</h1>
+        <div class="controls">
+            <label class="file-upload">
+                <span id="old-file-name">Upload OLD File</span>
+                <input type="file" id="old-file-input" accept=".txt">
+            </label>
+            <label class="file-upload">
+                <span id="new-file-name">Upload NEW File</span>
+                <input type="file" id="new-file-input" accept=".txt">
+            </label>
+            <button id="btn-compare" disabled>Compare</button>
+            <button id="btn-clear" class="btn-secondary">Clear</button>
+            <button id="btn-export-html" class="btn-export">Export HTML</button>
+            <button id="btn-export-excel" class="btn-export">Export Excel</button>
+            <button id="btn-export-pdf" class="btn-export">Export PDF</button>
+        </div>
+    </header>
+
+    <div class="container" id="results-section" style="display: none;">
+        
+        <!-- Summary Dashboard -->
+        <div class="dashboard">
+            <div class="card"><h3 id="dash-comp-added">0</h3><p>Components Added</p></div>
+            <div class="card"><h3 id="dash-comp-deleted">0</h3><p>Components Deleted</p></div>
+            <div class="card"><h3 id="dash-comp-modified">0</h3><p>Components Modified</p></div>
+            <div class="card"><h3 id="dash-conn-changes">0</h3><p>Connectivity Changes</p></div>
+            <div class="card"><h3 id="dash-nets-added">0</h3><p>Nets Added</p></div>
+            <div class="card"><h3 id="dash-nets-deleted">0</h3><p>Nets Deleted</p></div>
+            <div class="card"><h3 id="dash-nets-renamed">0</h3><p>Nets Renamed</p></div>
+        </div>
+
+        <!-- Toolbar (Search & Filter) -->
+        <div class="toolbar">
+            <div class="search-box">
+                <input type="text" id="globalSearch" placeholder="Global Search (RefDes, Net, Pin...)">
+            </div>
+            <div class="filter-container">
+                <label><input type="checkbox" id="chk-add-comp" checked> Added Comp</label>
+                <label><input type="checkbox" id="chk-del-comp" checked> Deleted Comp</label>
+                <label><input type="checkbox" id="chk-mod-comp" checked> Modified Comp</label>
+                <label><input type="checkbox" id="chk-conn" checked> Connectivity</label>
+                <label><input type="checkbox" id="chk-net-rename" checked> Net Rename</label>
+                <label><input type="checkbox" id="chk-add-net" checked> Added Net</label>
+                <label><input type="checkbox" id="chk-del-net" checked> Deleted Net</label>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-link active" data-target="tab1">Component Changes</button>
+            <button class="tab-link" data-target="tab2">Connectivity Changes</button>
+            <button class="tab-link" data-target="tab3">Component Drill Down</button>
+            <button class="tab-link" data-target="tab4">Net Rename Report</button>
+            <button class="tab-link" data-target="tab5">Added / Deleted Nets</button>
+        </div>
+
+        <!-- Tab 1: Component Changes -->
+        <div id="tab1" class="tab-content" style="display: block;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th onclick="SiemensReport.sortTable('tab1', 0, 'refdes')">RefDes</th>
+                        <th onclick="SiemensReport.sortTable('tab1', 1, 'status')">Status</th>
+                        <th onclick="SiemensReport.sortTable('tab1', 2, 'oldProperties')">Old Properties</th>
+                        <th onclick="SiemensReport.sortTable('tab1', 3, 'newProperties')">New Properties</th>
+                    </tr>
+                </thead>
+                <tbody id="tab1-tbody"></tbody>
+            </table>
+            <div class="pagination" id="tab1-pagination"></div>
+        </div>
+
+        <!-- Tab 2: Connectivity Changes -->
+        <div id="tab2" class="tab-content">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th onclick="SiemensReport.sortTable('tab2', 0, 'refdes')">RefDes</th>
+                        <th onclick="SiemensReport.sortTable('tab2', 1, 'pin')">Pin</th>
+                        <th onclick="SiemensReport.sortTable('tab2', 2, 'pinName')">Pin Name</th>
+                        <th onclick="SiemensReport.sortTable('tab2', 3, 'oldNet')">Old Net</th>
+                        <th onclick="SiemensReport.sortTable('tab2', 4, 'newNet')">New Net</th>
+                        <th onclick="SiemensReport.sortTable('tab2', 5, 'status')">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="tab2-tbody"></tbody>
+            </table>
+            <div class="pagination" id="tab2-pagination"></div>
+        </div>
+
+        <!-- Tab 3: Component Drill Down -->
+        <div id="tab3" class="tab-content">
+            <div id="tab3-tbody"></div>
+            <div class="pagination" id="tab3-pagination"></div>
+        </div>
+
+        <!-- Tab 4: Net Rename Report -->
+        <div id="tab4" class="tab-content">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Old Net</th>
+                        <th></th>
+                        <th>New Net</th>
+                    </tr>
+                </thead>
+                <tbody id="tab4-tbody"></tbody>
+            </table>
+            <div class="pagination" id="tab4-pagination"></div>
+        </div>
+
+        <!-- Tab 5: Added / Deleted Nets -->
+        <div id="tab5" class="tab-content">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th onclick="SiemensReport.sortTable('tab5', 0, 'net')">Net</th>
+                        <th onclick="SiemensReport.sortTable('tab5', 1, 'status')">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="tab5-tbody"></tbody>
+            </table>
+            <div class="pagination" id="tab5-pagination"></div>
+        </div>
+
+    </div>
+</body>
+</html>
